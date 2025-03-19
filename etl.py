@@ -2,16 +2,9 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from pymongo import MongoClient
 
-# -----------------------------------------------------
-# Step 2.1: SQL Data Extraction using SQLite
-# -----------------------------------------------------
-
-# Create an engine for SQLite. This will create (or connect to) a file named 'digital_banking.db'.
 engine = create_engine("sqlite:///digital_banking.db")
 
-# Use engine.begin() to automatically handle transactions and commit changes.
 with engine.begin() as conn:
-    # Create a sample Transactions table if it doesn't exist
     conn.execute(text("""
         CREATE TABLE IF NOT EXISTS Transactions (
             TransactionID INTEGER PRIMARY KEY,
@@ -43,12 +36,7 @@ try:
 except Exception as e:
     print("Error during SQL extraction:", e)
 
-
-# -----------------------------------------------------
-# Step 2.2: MongoDB Data Extraction
-# -----------------------------------------------------
-
-# Use the local MongoDB URI. Replace with your MongoDB Atlas URI if needed.
+# MongoDB Data Extraction
 MONGO_URI = "mongodb://localhost:27017"
 DATABASE_NAME = "customer_logs"
 COLLECTION_NAME = "events"
@@ -59,7 +47,7 @@ try:
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
 
-    # Optional: Insert sample log data if the collection is empty
+    # Insert sample log data if the collection is empty
     if collection.count_documents({}) == 0:
         sample_logs = [
             {"customer_id": 1, "event_date": "2025-01-05", "event_type": "login", "session_duration": 300},
@@ -77,12 +65,7 @@ try:
 except Exception as e:
     print("Error during MongoDB extraction:", e)
 
-
-# -----------------------------------------------------
-# Step 3: Data Cleaning & Preprocessing
-# -----------------------------------------------------
-
-# Standardize column names for SQL data
+# Data Cleaning & Preprocessing
 df_sql.rename(columns={
     "CustomerID": "customer_id",
     "TransactionDate": "transaction_date",
@@ -119,11 +102,8 @@ print("\nMerged Data after handling missing values:")
 print(df_merged.head())
 
 
-# -----------------------------------------------------
-# Step 4: Data Transformation & Aggregation
-# -----------------------------------------------------
+# Data Transformation & Aggregation
 
-# Digital Adoption: average of digital_channel column (assuming 1 = digital, 0 = non-digital)
 if 'digital_channel' in df_merged.columns:
     digital_adoption = df_merged['digital_channel'].mean() * 100  # percentage
 else:
@@ -141,8 +121,7 @@ if 'session_duration' in df_merged.columns:
 else:
     avg_session_duration = None
 
-# Optional: Conversion Rate
-# For demonstration, assume conversion rate is the proportion of transactions where event_type equals 'login'
+# For demonstration
 if 'event_type' in df_merged.columns:
     # Count rows where event_type is 'login'
     conversion_events = df_merged[df_merged['event_type'] == 'login'].shape[0]
@@ -165,9 +144,7 @@ if conversion_rate is not None:
 else:
     print("Conversion Rate: Not calculated (no event_type data available)")
 
-# -----------------------------------------------------
-# Step 4.2: Export KPIs to Excel (Optional)
-# -----------------------------------------------------
+# Export KPIs to Excel (Optional)
 
 # Prepare a DataFrame for KPIs
 df_kpis = pd.DataFrame({
